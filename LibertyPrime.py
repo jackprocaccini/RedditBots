@@ -1,44 +1,5 @@
 import praw
 
-
-def online():
-    online_bool = True
-    print("Entering online state")  # Used for debugging
-    while online_bool:  # while the bot is in the 'online' state
-        for message in reddit.inbox.unread(limit=None):  # check all unread messages
-            if message.subject == "Access Code:Pg5a3f" and ("offline" or "stop") in message.body:
-                print("Online state: message received")
-                message.reply("COMMAND ACCEPTED: LIBERTY PRIME - OFFLINE")
-                message.mark_read()
-                botport.submit(title="LIBERTY PRIME: OFFLINE",
-                               selftext="SHUTDOWN PROCEDURE GIVEN BY USER: " + str(message.author))
-                online_bool = False
-            else:
-                message.mark_read()
-                message.reply("COMMAND REJECTED: PLEASE REFER TO USER MANUAL AT SUBREDDIT HQ")
-    print("Going offline")
-    offline()
-
-
-def offline():
-    offline_bool = True
-    print("Entering offline state")  # Used for debugging
-    while offline_bool:  # while the bot is in the 'offline' state
-        for message in reddit.inbox.unread(limit=None):
-            if message.subject == "Access Code:Pg5a3f" and ("online" or "start") in message.body:
-                print("Offline state: message received")
-                message.reply("COMMAND ACCEPTED: LIBERTY PRIME - ONLINE")
-                message.mark_read()
-                botport.submit(title="LIBERTY PRIME: ONLINE",
-                               selftext="START UP PROCEDURE GIVEN BY USER: " + str(message.author))
-                offline_bool = False
-            else:
-                message.mark_read()
-                message.reply("COMMAND REJECTED: LIBERTY PRIME IS OFFLINE")
-    print("Going online")
-    online()
-
-
 reddit = praw.Reddit(client_id='zOTU2L6iq26CSw',
                      client_secret='5KZJM5WZZvZd43cFy_Eg2XTjVi8',
                      username='LIBERTY-PRIME-BOT',
@@ -48,11 +9,74 @@ reddit.validate_on_submit = True
 
 botport = reddit.subreddit('botport')
 
-botport.submit(title="LIBERTY PRIME: ONLINE", selftext="STARTUP PROCEDURE: ACTIVE"
-                                                       "\n\nDESIGNATION: LIBERTY-PRIME-BOT MK1"
-                                                       "\n\nPRIMARY TARGETS: ANY AND ALL RED CHINESE INVADERS"
-                                                       "\n\nMEME CANNONS: HOT"
-                                                       "\n\nAWAITING FURTHER INSTRUCTION")
+last_state = "online"
 
-print("Going online for the first time")
-online()
+
+def issue_command(command, message):
+    message.mark_read()
+    if command == "offline" or command == "stop":
+        message.reply("COMMAND ACCEPTED: LIBERTY PRIME - OFFLINE")
+        botport.submit(title="LIBERTY PRIME: OFFLINE",
+                       selftext="SHUTDOWN COMMAND GIVEN BY USER: " + message.author.name)
+        print("Going offline")
+        offline()
+    elif command == "online" or command == "start":
+        message.reply("COMMAND ACCEPTED: LIBERTY PRIME - ONLINE")
+        botport.submit(title="LIBERTY PRIME: ONLINE",
+                       selftext="START UP COMMAND GIVEN BY USER: " + message.author.name)
+        print("Going online")
+        online()
+    else:
+        message.reply("UNRECOGNIZED COMMAND. REFER TO THE USER MANUAL LOCATED IN SUBREDDIT HQ")
+
+
+def verify_user(username):
+    with open('verified_users.lp', 'r') as f:
+        for line in f:
+            if username == line:
+                return True
+    f.close()
+    return False
+
+
+def online():
+    print("Entering online state")  # Used for debugging
+    while True:  # while the bot is in the 'online' state
+        for message in reddit.inbox.unread(limit=None):  # check all unread messages
+            print("Online state: message received")
+            verified_user = verify_user(message.author.name)
+            message.mark_read()
+            if verified_user or message.subject == "Access Code:Pg5a3f":
+                issue_command(command=message.body, message=message)
+            else:
+                message.reply("COMMUNIST DETECTED. USER \'" + message.author.name + "\' NOT RECOGNIZED.")
+
+
+def offline():
+    print("Entering offline state")  # Used for debugging
+    while True:  # while the bot is in the 'offline' state
+        for message in reddit.inbox.unread(limit=None):
+            print("Offline state: message received")
+            verified_user = verify_user(message.author.name)
+            message.mark_read()
+            if (verified_user or message.subject == "Access Code: Pg5a3f") and ("online" in message.body or "start" in message.body):
+                issue_command(command=message.body, message=message)
+            else:
+                message.reply("COMMAND REJECTED: LIBERTY PRIME IS OFFLINE")
+
+
+def main():
+    botport.submit(title="LIBERTY PRIME: ONLINE", selftext="STARTUP PROCEDURE: ACTIVE"
+                                                           "\n\nDESIGNATION: LIBERTY-PRIME-BOT MK1"
+                                                           "\n\nPRIMARY TARGETS: ANY AND ALL RED CHINESE INVADERS"
+                                                           "\n\nMEME CANNONS: HOT"
+                                                           "\n\nRICK ROLL RIFLES: HOT"
+                                                           "\n\nDESIRE TO TROLL COMMUNISTS: RED. HOT."
+                                                           "\n\nAWAITING FURTHER INSTRUCTION")
+
+    print("Going online for the first time")
+    online()
+
+
+if __name__ == "__main__":
+    main()
