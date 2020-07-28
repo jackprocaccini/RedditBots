@@ -3,9 +3,9 @@ import praw
 
 def online():
     online_bool = True
-    print("Entering online state")
-    while online_bool:
-        for message in reddit.inbox.unread(limit=None):
+    print("Entering online state")  # Used for debugging
+    while online_bool:  # while the bot is in the 'online' state
+        for message in reddit.inbox.unread(limit=None):  # check all unread messages
             if message.subject == "Access Code:Pg5a3f" and ("offline" or "stop") in message.body:
                 print("Online state: message received")
                 message.reply("COMMAND ACCEPTED: LIBERTY PRIME - OFFLINE")
@@ -22,8 +22,8 @@ def online():
 
 def offline():
     offline_bool = True
-    print("Entering offline state")
-    while offline_bool:
+    print("Entering offline state")  # Used for debugging
+    while offline_bool:  # while the bot is in the 'offline' state
         for message in reddit.inbox.unread(limit=None):
             if message.subject == "Access Code:Pg5a3f" and ("online" or "start") in message.body:
                 print("Offline state: message received")
