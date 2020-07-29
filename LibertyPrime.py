@@ -1,4 +1,5 @@
 import praw
+import random
 
 reddit = praw.Reddit(client_id='zOTU2L6iq26CSw',
                      client_secret='5KZJM5WZZvZd43cFy_Eg2XTjVi8',
@@ -11,29 +12,36 @@ botport = reddit.subreddit('botport')
 
 last_state = "online"
 
-
 def issue_command(command, message):
     message.mark_read()
-    if command == "offline" or command == "stop":
+    print(command)
+    if command == "offline":
         message.reply("COMMAND ACCEPTED: LIBERTY PRIME - OFFLINE")
         botport.submit(title="LIBERTY PRIME: OFFLINE",
                        selftext="SHUTDOWN COMMAND GIVEN BY USER: " + message.author.name)
         print("Going offline")
         offline()
-    elif command == "online" or command == "start":
+    elif command == "online":
         message.reply("COMMAND ACCEPTED: LIBERTY PRIME - ONLINE")
         botport.submit(title="LIBERTY PRIME: ONLINE",
                        selftext="START UP COMMAND GIVEN BY USER: " + message.author.name)
         print("Going online")
         online()
     else:
-        message.reply("UNRECOGNIZED COMMAND. REFER TO THE USER MANUAL LOCATED IN SUBREDDIT HQ")
+        print("Summon detected. Responding with random line")
+        with open('responses.lp', 'r') as f:
+            lines = f.read().splitlines()
+            rand_line = str(random.choice(lines)).upper()
+            message.reply(rand_line)
+        # lines = open('responses.lp', 'r').read().splitlines()
+        # rand_line = random.choice(lines)
+        # print(rand_line)
 
 
 def verify_user(username):
     with open('verified_users.lp', 'r') as f:
         for line in f:
-            if username == line.rstrip():
+            if username == line.rstrip():  # necessary to remove new line character
                 return True
     f.close()
     return False
@@ -59,7 +67,8 @@ def offline():
             print("Offline state: message received")
             verified_user = verify_user(message.author.name)
             message.mark_read()
-            if (verified_user or message.subject == "Access Code: Pg5a3f") and ("online" in message.body or "start" in message.body):
+            if (verified_user or message.subject == "Access Code: Pg5a3f") and (
+                    "online" in message.body or "start" in message.body):
                 issue_command(command=message.body, message=message)
             else:
                 message.reply("COMMAND REJECTED: LIBERTY PRIME IS OFFLINE")
