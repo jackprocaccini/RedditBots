@@ -33,7 +33,7 @@ def issue_command(command, message):
 def verify_user(username):
     with open('verified_users.lp', 'r') as f:
         for line in f:
-            if username == line:
+            if username == line.rstrip():
                 return True
     f.close()
     return False
