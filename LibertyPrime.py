@@ -10,9 +10,11 @@ reddit.validate_on_submit = True
 
 botport = reddit.subreddit('botport')
 
-last_state = "online"
+last_state = "ONLINE"
+
 
 def issue_command(command, message):
+    global last_state
     message.mark_read()
     print(command)
     if command == "offline":
@@ -20,22 +22,21 @@ def issue_command(command, message):
         botport.submit(title="LIBERTY PRIME: OFFLINE",
                        selftext="SHUTDOWN COMMAND GIVEN BY USER: " + message.author.name)
         print("Going offline")
+        last_state = "OFFLINE"
         offline()
     elif command == "online":
         message.reply("COMMAND ACCEPTED: LIBERTY PRIME - ONLINE")
         botport.submit(title="LIBERTY PRIME: ONLINE",
                        selftext="START UP COMMAND GIVEN BY USER: " + message.author.name)
         print("Going online")
+        last_state = "ONLINE"
         online()
+    elif command == "status":
+        print("Status query")
+        message.reply("COMMAND ACCEPTED: CURRENT STATUS - " + last_state.upper())
     else:
-        print("Summon detected. Responding with random line")
-        with open('responses.lp', 'r') as f:
-            lines = f.read().splitlines()
-            rand_line = str(random.choice(lines)).upper()
-            message.reply(rand_line)
-        # lines = open('responses.lp', 'r').read().splitlines()
-        # rand_line = random.choice(lines)
-        # print(rand_line)
+        print("Unrecognized command: \'" + command + "\' not found")
+        message.reply("COMMAND: \'" + command + "\' UNKNOWN.")
 
 
 def verify_user(username):
@@ -54,10 +55,14 @@ def online():
             print("Online state: message received")
             verified_user = verify_user(message.author.name)
             message.mark_read()
-            if verified_user or message.subject == "Access Code:Pg5a3f":
+            if (verified_user or message.subject == "Access Code:Pg5a3f") and (message.body == "offline" or message.body == "online" or message.body == "status"):
                 issue_command(command=message.body, message=message)
             else:
-                message.reply("COMMUNIST DETECTED. USER \'" + message.author.name + "\' NOT RECOGNIZED.")
+                print("Summon detected. Responding with random line")
+                with open('responses.lp', 'r') as f:
+                    lines = f.read().splitlines()
+                    rand_line = str(random.choice(lines)).upper()
+                message.reply(rand_line)
 
 
 def offline():
@@ -67,11 +72,9 @@ def offline():
             print("Offline state: message received")
             verified_user = verify_user(message.author.name)
             message.mark_read()
-            if (verified_user or message.subject == "Access Code: Pg5a3f") and (
-                    "online" in message.body or "start" in message.body):
+            if (verified_user or message.subject == "Access Code: Pg5a3f") and (message.body == "offline" or message.body == "online" or message.body == "status"):
+                print("Verified user detected. Processing command")
                 issue_command(command=message.body, message=message)
-            else:
-                message.reply("COMMAND REJECTED: LIBERTY PRIME IS OFFLINE")
 
 
 def main():
